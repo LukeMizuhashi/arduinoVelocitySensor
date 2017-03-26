@@ -8,28 +8,28 @@
 
 #include "Timer.h"
 
-Sensor::Sensor(int inputPin,int redPinOut,int greenPinOut,int bluePinOut,float ballDiameter)
+Sensor::Sensor(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter)
 {
-  init(inputPin,redPinOut,greenPinOut,bluePinOut,ballDiameter,false);
+  init(inputPin,redPinOut,yellowPinOut,greenPinOut,ballDiameter,false);
 }
 
-Sensor::Sensor(int inputPin,int redPinOut,int greenPinOut,int bluePinOut,float ballDiameter,boolean useMicroseconds)
+Sensor::Sensor(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter,boolean useMicroseconds)
 {
-  init(inputPin,redPinOut,greenPinOut,bluePinOut,ballDiameter,useMicroseconds);
+  init(inputPin,redPinOut,yellowPinOut,greenPinOut,ballDiameter,useMicroseconds);
 }
 
-void Sensor::init(int inputPin,int redPinOut,int greenPinOut,int bluePinOut,float ballDiameter,boolean useMicroseconds)
+void Sensor::init(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter,boolean useMicroseconds)
 {
   MAX_ANALOG_READ_RATE_MICRO = 100; // One read per 100 microseconds
   TRIGGER_VOLTAGE_DROP = 0.03;
   
   SENSOR_IN = inputPin;
   RED_OUT = redPinOut;
+  YELLOW_OUT = yellowPinOut;
   GREEN_OUT = greenPinOut;
-  BLUE_OUT = bluePinOut;
   
-  pinMode(BLUE_OUT,OUTPUT);
   pinMode(GREEN_OUT,OUTPUT);
+  pinMode(YELLOW_OUT,OUTPUT);
   pinMode(RED_OUT,OUTPUT);
 
   Timer timer(useMicroseconds);
@@ -39,6 +39,20 @@ void Sensor::init(int inputPin,int redPinOut,int greenPinOut,int bluePinOut,floa
   BALL_DIAMETER = ballDiameter;
 
   inErrorState = false;
+}
+
+void Sensor::cycleStatusLights() {
+  digitalWrite(RED_OUT,HIGH);
+  delay(500);
+  digitalWrite(RED_OUT,LOW);
+  
+  digitalWrite(YELLOW_OUT,HIGH);
+  delay(500);
+  digitalWrite(YELLOW_OUT,LOW);
+  
+  digitalWrite(GREEN_OUT,HIGH);
+  delay(500);
+  digitalWrite(GREEN_OUT,LOW);
 }
 
 double Sensor::update(boolean writeToLog)
@@ -78,25 +92,20 @@ void Sensor::updateMax(double voltage) {
 }
 
 void Sensor::updateView(double voltage) {
-  updateBeamBrokenView(voltage);
-  updateStateView();
-}
-
-void Sensor::updateBeamBrokenView(double voltage) {
-  if (beamBroken(voltage)) {
-    digitalWrite(BLUE_OUT,HIGH);
-  } else {
-    digitalWrite(BLUE_OUT,LOW);
-  }
-}
-
-void Sensor::updateStateView() {
   if (inErrorState) {
     digitalWrite(RED_OUT,HIGH);
+    digitalWrite(YELLOW_OUT,LOW);
     digitalWrite(GREEN_OUT,LOW);
   } else {
-    digitalWrite(RED_OUT,LOW);
-    digitalWrite(GREEN_OUT,HIGH);
+    if (beamBroken(voltage)) {
+      digitalWrite(RED_OUT,LOW);
+      digitalWrite(YELLOW_OUT,HIGH);
+      digitalWrite(GREEN_OUT,LOW);
+    } else {
+      digitalWrite(RED_OUT,LOW);
+      digitalWrite(YELLOW_OUT,LOW);
+      digitalWrite(GREEN_OUT,HIGH);
+    }
   }
 }
 
