@@ -14,10 +14,10 @@
 class Sensor
 {
   public:
-    Sensor(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter);
-    Sensor(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter,boolean useMicroseconds);
+    Sensor(int inputPin,int lightSource,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter);
+    Sensor(int inputPin,int lightSource,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter,boolean useMicroseconds);
 
-    void cycleStatusLights();
+    void initialize();
     
     double update();
     double update(boolean writeToLog);
@@ -25,7 +25,7 @@ class Sensor
     void waitForNextLoop(unsigned long loopStartMicro);
     
   private:
-    void init(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter,boolean useMicroseconds);
+    void init(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,int lightSource,float ballDiameter,boolean useMicroseconds);
 
     double getVoltage();
     double getMinVoltage();
@@ -43,7 +43,8 @@ class Sensor
     void log(double voltage);
     
     boolean inErrorState;
-    
+
+    int LIGHT_SOURCE;
     int SENSOR_IN;
 
     int RED_OUT;
@@ -54,7 +55,7 @@ class Sensor
 
     double minVoltage;
     double maxVoltage;
-    double TRIGGER_VOLTAGE_DROP;
+    double TRIGGER_VOLTAGE;
 
     Timer timer;
 
