@@ -8,29 +8,32 @@
 
 #include "Timer.h"
 
-Sensor::Sensor(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter)
+Sensor::Sensor(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,int light,float ballDiameter)
 {
-  init(inputPin,redPinOut,yellowPinOut,greenPinOut,ballDiameter,false);
+  init(inputPin,redPinOut,yellowPinOut,greenPinOut,light,ballDiameter,false);
 }
 
-Sensor::Sensor(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter,boolean useMicroseconds)
+Sensor::Sensor(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,int light,float ballDiameter,boolean useMicroseconds)
 {
-  init(inputPin,redPinOut,yellowPinOut,greenPinOut,ballDiameter,useMicroseconds);
+  init(inputPin,redPinOut,yellowPinOut,greenPinOut,light,ballDiameter,useMicroseconds);
 }
 
-void Sensor::init(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter,boolean useMicroseconds)
+void Sensor::init(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,int light,float ballDiameter,boolean useMicroseconds)
 {
   MAX_ANALOG_READ_RATE_MICRO = 100; // One read per 100 microseconds
-  TRIGGER_VOLTAGE_DROP = 0.03;
+  minVoltage = 4.5;
+  maxVoltage = -4.5;
   
   SENSOR_IN = inputPin;
   RED_OUT = redPinOut;
   YELLOW_OUT = yellowPinOut;
   GREEN_OUT = greenPinOut;
+  LIGHT = light;
   
   pinMode(GREEN_OUT,OUTPUT);
   pinMode(YELLOW_OUT,OUTPUT);
   pinMode(RED_OUT,OUTPUT);
+  pinMode(LIGHT,OUTPUT);
 
   Timer timer(useMicroseconds);
 
@@ -41,18 +44,36 @@ void Sensor::init(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,fl
   inErrorState = false;
 }
 
-void Sensor::cycleStatusLights() {
+void Sensor::primeSensor() {
+  const unsigned short MILLIS_PER_LIGHT = 500;
+  const unsigned short MILLIS_TO_IGNORE = 100;
+  const double PERCENT_MIN_VOLTAGE = 0.98;
+  
   digitalWrite(RED_OUT,HIGH);
-  delay(500);
+  digitalWrite(LIGHT,HIGH);
+  double voltage;
+  unsigned short startOfSampleLoopMillis;
+
+  unsigned long PRIME_SENSOR_START_MILLI = millis();
+  do {
+    startOfSampleLoopMillis = millis();
+    voltage = getVoltage();
+    if (voltage > maxVoltage) {
+      maxVoltage = voltage;
+    }
+    if (voltage < minVoltage) {
+      minVoltage = voltage;
+    }
+  } while (startOfSampleLoopMillis - PRIME_SENSOR_START_MILLI < MILLIS_PER_LIGHT);
+  
+  TRIGGER_VOLTAGE_DROP = minVoltage * PERCENT_MIN_VOLTAGE;
   digitalWrite(RED_OUT,LOW);
   
   digitalWrite(YELLOW_OUT,HIGH);
-  delay(500);
+  delay(MILLIS_PER_LIGHT);
   digitalWrite(YELLOW_OUT,LOW);
   
   digitalWrite(GREEN_OUT,HIGH);
-  delay(500);
-  digitalWrite(GREEN_OUT,LOW);
 }
 
 double Sensor::update(boolean writeToLog)
@@ -96,22 +117,24 @@ void Sensor::updateView(double voltage) {
     digitalWrite(RED_OUT,HIGH);
     digitalWrite(YELLOW_OUT,LOW);
     digitalWrite(GREEN_OUT,LOW);
+    digitalWrite(LIGHT,LOW);
   } else {
     if (beamBroken(voltage)) {
       digitalWrite(RED_OUT,LOW);
       digitalWrite(YELLOW_OUT,HIGH);
       digitalWrite(GREEN_OUT,LOW);
+      digitalWrite(LIGHT,HIGH);
     } else {
       digitalWrite(RED_OUT,LOW);
       digitalWrite(YELLOW_OUT,LOW);
       digitalWrite(GREEN_OUT,HIGH);
+      digitalWrite(LIGHT,HIGH);
     }
   }
 }
 
 boolean Sensor::beamBroken(double voltage) {
-  double triggerLevel = maxVoltage - TRIGGER_VOLTAGE_DROP;
-  return (voltage < triggerLevel);
+  return (voltage < TRIGGER_VOLTAGE_DROP);
 }
 
 double Sensor::getMinVoltage() {
@@ -159,6 +182,9 @@ void Sensor::log(double voltage) {
 
   message += " Maximum Voltage (V): ";
   message += getMaxVoltage();
+
+  message += " Trigger Level (V): ";
+  message += TRIGGER_VOLTAGE_DROP;
 
   message += " Timer (s): ";
   message += timer.getTime();

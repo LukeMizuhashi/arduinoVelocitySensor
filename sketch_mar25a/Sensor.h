@@ -14,10 +14,10 @@
 class Sensor
 {
   public:
-    Sensor(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter);
-    Sensor(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter,boolean useMicroseconds);
+    Sensor(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,int light,float ballDiameter);
+    Sensor(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,int light,float ballDiameter,boolean useMicroseconds);
 
-    void cycleStatusLights();
+    void primeSensor();
     
     double update();
     double update(boolean writeToLog);
@@ -25,7 +25,7 @@ class Sensor
     void waitForNextLoop(unsigned long loopStartMicro);
     
   private:
-    void init(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,float ballDiameter,boolean useMicroseconds);
+    void init(int inputPin,int redPinOut,int yellowPinOut,int greenPinOut,int light,float ballDiameter,boolean useMicroseconds);
 
     double getVoltage();
     double getMinVoltage();
@@ -49,6 +49,8 @@ class Sensor
     int RED_OUT;
     int YELLOW_OUT;
     int GREEN_OUT;
+
+    int LIGHT;
         
     short MAX_ANALOG_READ_RATE_MICRO;
 
