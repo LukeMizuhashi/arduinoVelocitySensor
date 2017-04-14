@@ -88,8 +88,8 @@ double Sensor::update(boolean writeToLog)
 double Sensor::update()
 {
   const double VOLTAGE = getVoltage();
-  updateMin(VOLTAGE);
-  updateMax(VOLTAGE);
+//  updateMin(VOLTAGE);
+//  updateMax(VOLTAGE);
   updateVelocity(VOLTAGE);
   updateView(VOLTAGE);
   return VOLTAGE;
@@ -180,20 +180,20 @@ void Sensor::log(double voltage) {
   message += " Minimum Voltage (V): ";
   message += getMinVoltage();
 
-  message += " Maximum Voltage (V): ";
-  message += getMaxVoltage();
+//  message += " Maximum Voltage (V): ";
+//  message += getMaxVoltage();
 
   message += " Trigger Level (V): ";
   message += TRIGGER_VOLTAGE_DROP;
-
-  message += " Timer (s): ";
-  message += timer.getTime();
-  
-  message += " Ball Diameter (m): ";
-  message += BALL_DIAMETER;
-
-  message += " Velocity (m/s): ";
-  message += velocity;
+//
+//  message += " Timer (s): ";
+//  message += timer.getTime();
+//  
+//  message += " Ball Diameter (m): ";
+//  message += BALL_DIAMETER;
+//
+//  message += " Velocity (m/s): ";
+//  message += velocity;
   
   Serial.println(message);
 }
